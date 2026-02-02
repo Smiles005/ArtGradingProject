@@ -1,0 +1,86 @@
+{% extends "artGrading/layout.html" %} {% load static %} 
+
+{% block baseScript %}
+    {% block script %}
+    <script src="{% static '/js/project-edit.js' %}"></script>
+    {% endblock %}
+{% endblock %}
+
+{% block CSS %}
+    <link rel="stylesheet" href="{% static '/css/project-edit.css' %}">
+    {{ block.super}}
+{% endblock %}
+
+{% block body %}
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+    <h1>Project Name: {{ project.name }}</h1>
+    <script>
+        var isTemplate = "{{project.isTemplate}}";
+        if (!isTemplate) {
+            isTemplate.style.display = "none"
+        }
+    </script>
+    <h1 id="isTemplate">Template</h1>
+    <h3>Student Name: {{project.name }}</h3>
+    </div>
+    
+</nav>
+<div class="container-fluid">
+    <button type="button" class="btn btn-primary" onclick="createTable(2,3,document.getElementById('hmm'))">Add Table</button>
+    <button type="button" class="btn btn-primary" onclick="createSlider(document.getElementById('hmm'))">Add Slider</button>
+</div>
+    <p>Course: {{ associatedCourse.name }}</p>
+    <p>Assignment: {{ associatedAssignment.name }}</p>
+
+    <div>
+        
+          <p><input  type="file"  accept="image/*" name="image" id="file"  onchange="loadFile(event)" style="display: none;"></p>
+          <p><label for="file" style="cursor: pointer;">Upload Submission</label></p>
+          <p><img id="output" width="200" /></p>
+
+        <script>
+        var loadFile = function(event) {
+            var image = document.getElementById('output');
+            image.src = URL.createObjectURL(event.target.files[0]);
+        };
+        </script>
+        <!-- Add Stuff to add the Tables and Sliders -->
+        <!-- Tables Formatting -->
+        <!-- gonna assume we get a number for the amounts of rows and colmns -->
+        
+        <!-- Sliders Formatting -->
+        <!-- assume we will just get a number for amt of sliders -->
+        <!-- HERE IS THE FORMAT OF HOW EACH SLIDER WILL DISPLAY (w/o css or anything fancy) -->
+        <input type="text" id="slidersTitle"></input>
+        <input type="text" class="sliderLabel" id="leftSliderRange" ></input>
+        <div class="slidecontainer">
+            <input type="range" min="1" max="100" value="75" class="slider" id="myRange"></input>
+        </div>
+        <input type="text" class="sliderLabel" id="rightSideRange"></input>
+        <p id="sliderValue"></p>
+        <div id="hmm">
+        <script>
+            const divhmm = document.getElementById("hmm");
+            var numOfTables = "{{project.numTables}}";
+            var numOfColmns = 3;
+            var numOfRows = 2;
+            var numOfSliders = "{{project.numSliders}}";
+            console.log(numOfTables);
+            console.log(numOfSliders);
+
+
+            for(let i = 0; i < (numOfTables); i++){
+                createTable(numOfRows,numOfColmns, divhmm);
+            }
+            // Need Input from create project for amount
+            for(let i = 0; i < (numOfSliders); i++) {
+                createSlider(divhmm);
+            }
+        </script>
+        </div>
+    </div>
+
+    
+
+    {% endblock %}

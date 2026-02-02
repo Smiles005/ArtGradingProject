@@ -1,0 +1,30 @@
+.navbar {
+    border: 3px;
+    color:aliceblue;
+    background-color: #0C2D48;
+}
+
+#secondary-Navbar {
+    background-color: #0C2D48;
+    color: aliceblue;
+}
+.navbar-brand{
+    color:aliceblue;
+}
+.a {
+    color:aliceblue;
+    background-color: #0C2D48;
+}
+.div {
+    color: aliceblue;
+    background-color: #0C2D48;
+}
+#bigNav{
+    box-shadow:
+    0 0.2px 0.2px rgba(0, 0, 0, 0.034),
+    0 0.7px 0.5px rgba(0, 0, 0, 0.048),
+    0 0.6px 0.5px rgba(0, 0, 0, 0.06),
+    0 1.3px 1.2px rgba(0, 0, 0, 0.072),
+    0 4.8px 3.4px rgba(0, 0, 0, 0.086),
+    0 5px 4px rgba(0, 0, 0, 0.12);
+}

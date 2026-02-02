@@ -1,0 +1,93 @@
+{% extends "artGrading/layout.html" %}
+{% load static %} 
+
+{% block CSS %}
+    <link rel="stylesheet" href="{% static '/css/homepage.css' %}"> 
+    <link rel="stylesheet" href="{% static '/css/search-results.css' %}">
+    {{ block.super }}
+{% endblock %}
+
+{% block script %}
+    <script src="{% static '/js/homepage.js' %}"> </script>
+{% endblock %}
+
+{% block body %}
+    <br/>
+    <br/>
+    <a href="{% url 'homepage' %}">Home</a>
+
+    <form action = "{% url 'searchResults' %}" method = "POST">
+        {% csrf_token %}
+        <input type="text" placeholder="Search..." id="myInput" name = "searchParameter" list = "search-datalist" value = "{{ searchParameter }}">
+        <div id="myDropdown" class="dropdown-content">
+            <h5>Assignments</h5>
+            <div id="dropdownAssignments">
+            </div>
+            <h5>Courses</h5>
+            <div id="dropdownCourses">
+            </div>
+            <h5>Projects</h5>
+            <div id="dropdownProjects">
+            </div>
+            <h5>Students</h5>
+            <div id="dropdownStudents">
+            </div>
+        </div>
+        <button type = "submit" id = "search-button" class = "btn btn-primary">Search</button>
+    </form>
+        
+    </div>
+
+    <div id = "search-results-div">
+        <div class = "search-results-block-content">
+            <h3 class="btn btn-outline-dark btn-lg" type = "button" data-bs-toggle = "collapse" 
+            data-bs-target = "#assignments-search-results" aria-expanded="true" aria-controls="assignments-search-results">
+                Assignments
+            </h3>
+            <div id = "assignments-search-results" class = "collapse.show">
+                {% for assignment in searchResults.assignments  %}
+                    <p><a href = "{% url 'specificAssignmentView' assignmentID=assignment.id %}">{{ assignment.name }} -- {{ assignment.course.name }}</a></p>
+                {% endfor %}
+            </div>
+        </div>
+    
+        <div class = "search-results-block-content">
+            <h3 class="btn btn-outline-dark btn-lg" type = "button" data-bs-toggle = "collapse" 
+                data-bs-target = "#courses-search-results" aria-expanded="true" aria-controls="courses-search-results">
+                Courses
+            </h3>
+            <div id = "courses-search-results" class = "collapse.show">
+                {% for course in searchResults.courses  %}
+                    <p><a href = "{% url 'specificCourseView' courseID=course.id %}">{{ course.courseCode }} -- {{ course.name }} -- {{ course.semster }} {{ course.year }}</a></p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class = "search-results-block-content">
+            <h3 class="btn btn-outline-dark btn-lg" type = "button" data-bs-toggle = "collapse" 
+            data-bs-target = "#projects-search-results" aria-expanded="true" aria-controls="projects-search-results">
+                Projects
+            </h3>
+            <div id = "projects-search-results" class = "collapse.show">
+                {% for project in searchResults.projects  %}
+                    <p><a href = "{% url 'specificProjectView' projectID=project.id %}">{{ project.name }} -- {{ project.course.name }}</a></p>
+                {% endfor %}
+            </div>
+        </div>
+    
+        <div class = "search-results-block-content">
+            <h3 class="btn btn-outline-dark btn-lg" type = "button" data-bs-toggle = "collapse" 
+                data-bs-target = "#students-search-results" aria-expanded="true" aria-controls="students-search-results">
+                Students
+            </h3>
+            <div id = "students-search-results" class = "collapse.show">
+                {% for student in searchResults.students  %}
+                    <p><a href = "{% url 'specificStudentView' studentID=student.id %}">{{ student.name }}</a></p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    
+
+{% endblock %}

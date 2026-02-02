@@ -1,0 +1,92 @@
+ /* The search field */
+  
+ .body{
+  background-color: #B1D4E0;
+ }
+  #myInput {
+      box-sizing: border-box;
+      background-position: 14px 12px;
+      background-repeat: no-repeat;
+      font-size: 16px;
+      padding: 14px 20px 12px 45px;
+      border: none;
+      border-bottom: 1px solid #ddd;
+      width: 100%
+
+  }
+  /* The search field when it gets focus/clicked on */
+  
+  #myInput:focus {
+      outline: 3px solid #ddd;
+  }
+  /* The container <div> - needed to position the dropdown content */
+  
+  .dropdown {
+    position: relative;
+    align-self: center;
+    height: 100%; 
+    width: 97%; 
+    margin: auto; 
+    padding: 0px;
+    box-shadow:
+    0 0.2px 0.2px rgba(0, 0, 0, 0.034),
+    0 0.7px 0.5px rgba(0, 0, 0, 0.048),
+    0 0.6px 0.5px rgba(0, 0, 0, 0.06),
+    0 1.3px 1.2px rgba(0, 0, 0, 0.072),
+    0 4.8px 3.4px rgba(0, 0, 0, 0.086),
+    0 5px 4px rgba(0, 0, 0, 0.12);
+    /* display: inline-block; */
+  }
+
+  /* Dropdown Content (Hidden by Default) */
+  
+  .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: rgb(177, 177, 177);
+      min-width: 230px;
+      border: 1px solid rgb(6, 6, 6);
+      z-index: 1;
+  }
+  
+.dropdown-content:nth-child(even){background-color: #e9e9e9;}
+.dropdown-content:nth-child(odd){background-color: #daccd4;}
+
+  /* Links inside the dropdown */
+  .results {
+    display: none;
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+  }
+
+  
+  .dropdown-content a {
+      display: none;
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+  }
+  /* Change color of dropdown links on hover */
+  
+  .dropdown-content a:hover {
+      background-color: #f1f1f1
+  }
+
+  /*Homepage shortcut buttons*/
+  .button {
+      background-color: #145DA0;
+      border-style: outset;
+      color: rgb(255, 255, 255);
+      text-align: center;
+      font-size: 20px;
+      width: 220px; 
+      height: 130px;
+  }
+
+  .button:hover {
+    background-color: #2470b8;
+    border-style: inset;
+  }

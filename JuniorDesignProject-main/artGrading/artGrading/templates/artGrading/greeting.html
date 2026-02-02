@@ -1,0 +1,16 @@
+{% extends "artGrading/base.html" %}
+{% load static %}
+
+{% block baseCSS %}
+    <link rel = "stylesheet" href="{% static '/css/greeting.css' %}">
+{% endblock %}
+
+{% block baseBody %}
+    <div class="card" style="margin: auto; width: 500px; padding: 30px; top: 200px">
+        <div class="card-body">
+            <h5 class="card-title">{{ artQuote }}</h5>
+            <p class="card-text">- {{ artQuoteAuthor }}</p>
+            <a href="{% url 'homepage' %}" class="btn btn-primary">Go to the Homepage</a>
+        </div>
+    </div>
+{% endblock %}

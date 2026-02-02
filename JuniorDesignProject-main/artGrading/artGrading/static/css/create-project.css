@@ -1,0 +1,28 @@
+/* Styling for entire page */
+h1, .form-horizontal {
+    margin: 20px;
+
+}
+h1 {
+    color: black;
+
+}
+
+/* Add Student Form */
+.form-horizontal {
+    color: black;
+    margin-left: 50px;
+
+}
+input {
+    margin-bottom: 10px;
+    background-color: red; 
+}
+
+select {
+    width: 100%;
+    padding: 16px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #a13737;
+  }

@@ -1,0 +1,183 @@
+{% extends "artGrading/layout.html" %}
+
+{% block body %}
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid" id="secondary-Navbar">
+        <p>Database View</p>
+        
+        
+    
+    {% comment %}Need to populate URLs with course, student, project IDs, etc.{% endcomment %}
+    {% if itemType == 'student' %}
+    <p>Student View</p>
+        <a class="btn btn-primary" href ="{% url 'courseView' %}" role="button">Courses</a>
+        <a class="btn btn-primary" href ="{% url 'assignmentView' %}" role="button">Assignments</a>
+        <a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Students</a>
+    </div>
+</nav>
+    <div class="container-fluid">
+        <h1>{{item.name}}</h1>
+        <h3>{{item.id}}</h3>
+    </div>
+        <div>
+            <form action = "{% url 'removeItem' 'student' item.id %}" method = "POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Delete Student</button>
+            </form>
+        </div>
+    <div>
+        <table class="table table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Projects</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for item in item.associatedItems.associatedProjects %}
+                    <td>{{ item.id}}</td>
+                    <td><a href="">{{ item.name }}</a></td>
+                    {% endfor %}
+                    <td><label for="status">Status:</label>
+
+                        <select name="status" id="cars">
+                          <option value="open">Open</option>
+                          <option value="late">Late</option>
+                          <option value="submitted">Submitted</option>
+                          <option value="Graded">Graded</option>
+                          <option value="Returned">Returned</option>
+                        </select></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+        
+
+        
+
+    {% elif itemType == 'assignment' %}
+        Assignment View
+        <a class="btn btn-primary" href ="{% url 'courseView' %}" role="button">Courses</a>
+        <a class="btn btn-primary" href ="{% url 'assignmentView' %}" role="button">Assignments</a>
+        <a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Students</a>
+    </div>
+</nav>
+
+        <div>
+            <h3>{{ associatedItems.associatedCourse.name }}</h3>
+            <h1> {{ item.name }} </h1>
+        </div>
+        
+        <div>
+            <form action = "{% url 'removeItem' 'assignment' item.id %}" method = "POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Delete Assignment</button>
+            </form>
+        </div>
+        
+        <div class="container-fluid">
+            
+            
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Project Name</th>
+                        <th scope="col">Student Name</th>
+                        <th scope="col"></th>
+                        <th scope="col">Remove Student</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in associatedItems.associatedProjects %}
+                    <tr>
+                        <th scope="row">{{ item.id }}</th>
+                        <td><a href="{% url 'specificProjectView' item.id %}"> {{ item.name }} </a></td>
+                        <td><a href="{% url 'specificStudentView' item.id %}">Student Name:{{ item.student.name }}</a></td>
+                        <td></td>
+                        <td><a class="btn btn-primary" href ="{% url 'removeItem' 'student' item.id %}" role="button">Remove Student</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% elif itemType == 'course' %}
+        Course View
+        <a class="btn btn-primary" href ="{% url 'courseView' %}" role="button">Courses</a>
+        <a class="btn btn-primary" href ="{% url 'assignmentView' %}" role="button">Assignments</a>
+        <a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Students</a>
+    </div>
+</nav>
+
+        <div>
+            <h1>{{ item.name }}</h1>
+        </div>
+
+        <div>
+            <form action = "{% url 'removeItem' 'course' item.id %}" method = "POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Delete Course</button>
+            </form>
+        </div>
+
+        {% for assignment in associatedItems.associatedAssignments %}
+            <div class="container-fluid">
+                <h3>{{ assignment.name }}</h3>
+            </div>
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Project Name</th>
+                        <th scope="col">Student Name</th>
+                        <th scope="col"></th>
+                        <th scope="col">Remove Student</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in associatedItems.associatedProjects %}
+                        {% if item.id == assignment.id  %}
+                            {% for key, project in item.projects.items %}
+                                <tr>
+                                    <th scope="row">{{ project.id }}</th>
+                                    <td><a href = "{% url 'specificProjectView' project.id %}">{{ project.name }}</a></td>
+                                    <td>
+                                        {% if project.student %}
+                                            <a href="{% url 'specificStudentView' project.student.id %}">Student Name: {{ project.student.name }}</a>
+                                        {% endif %}
+                                    </td>
+                                    <td></td>
+                                    <td><a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Delete Student Project Submission</a></td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% endfor %}
+        
+    {% elif itemType == 'project' %}
+    
+    <a class="btn btn-primary" href ="{% url 'courseView' %}" role="button">Courses</a>
+    <a class="btn btn-primary" href ="{% url 'assignmentView' %}" role="button">Assignments</a>
+    <a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Students</a>
+</div>
+</nav>
+    <h1>THIS IS A PROJECT VIEW</h1>
+
+    <a href="{% url 'projectEdit' item.id %}">{{ item.name }}</a>
+
+    <div>
+        <form action = "{% url 'removeItem' 'project' item.id %}" method = "POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Delete Project</button>
+        </form>
+    </div>
+
+    {{item.associatedCourse.name}}
+    {{item.associatedAssignment.name}}
+       
+    {% endif %}
+{% endblock %}

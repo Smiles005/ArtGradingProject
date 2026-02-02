@@ -1,0 +1,241 @@
+{% extends "artGrading/layout.html" %} {% load static %}
+
+{% block CSS %}
+    <link rel="stylesheet" href="{% static '/css/dbItemView.css' %}">
+    {{ block.super }}
+{% endblock %}
+
+{% block script %}
+    <script src="{% static '/js/database-item-view.js' %}"> </script>
+{% endblock %} 
+
+{% block body %}
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <p>Database View</p>
+        
+        <a class="btn btn-primary" href ="{% url 'courseView' %}" role="button">Courses</a>
+        <a class="btn btn-primary" href ="{% url 'assignmentView' %}" role="button">Assignments</a>
+        <a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Students</a>
+        
+    
+
+    {% if itemType == 'student' %}
+   
+        <a class="btn btn-warning" href="{% url 'createStudent' %}" role="button">Add Student</a>
+    </div>
+</nav>
+        <div>
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Student Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">StudentID</th>
+                        <th scope="col"></th>
+                        <th scope="col">Expell</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <th scope="row">{{ item.id }}</th>
+                        <td>
+                           <a href="{% url 'specificStudentView' item.id %}">{{ item.name }}</a> 
+
+                        </td>
+                        <td>{{ item.email }}</td>
+                        <td>{{ item.studentID }}</td>
+                        <td></td>
+                        <td><a class="btn btn-primary" href ="{% url 'studentView' %}" role="button">Delete Student</a> </td>
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% elif itemType == 'assignment' %}
+        <!-- Assignment Database View -->
+        <!-- Button for Assignment-->
+        <a class="btn btn-warning open-button" onclick="openForm()"role="button">Add Assignment</a>
+    </div>
+</nav>
+        <div>
+            <!-- Pop-up -->
+            <div class="form-popup" id="myForm" style="display: none;">
+                <form class="form-container"  method = "POST" action = "{% url 'addItem' 'assignment' %}">
+                    {% csrf_token %}
+                    <h1> Add an Assignment</h1>
+
+                    <label for="name"><b>Name</b></label>
+                    <input type="text" placeholder="Enter Assignment Name" name="name" required>
+
+                    <label for="course"><b>Course</b></label>
+                    <select name="course" id="course">
+                        {% for item in courses %}
+                        <option value = "{{ item.id }}">{{ item.name }}</option>
+                        {% endfor %}
+
+                    </select>
+                    <!-- Add Students from course linked, might actually be in java for after form is submitted -->
+                    <button type="submit" class="submit btn" onclick="closeForm()">Add Assignment</button>
+                    <button type="button" class="cancel btn" onclick="closeForm()">Close</button>
+                </form>
+            </div>
+
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Assignment Name</th>
+                        <th scope="col">Course Name</th>
+                        <th scope="col"></th>
+                        <th scope="col">Remove</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <th scope="row"> {{ item.id }}</th>
+                        <td><a href="{% url 'specificAssignmentView' item.id %}">{{ item.name }}</a> </td>
+                        <td>{{ item.course.name }}</td>
+                        <td></td>
+                        <td><a class="btn btn-primary" href ="{% url 'removeItem' 'assignment' item.id %}" role="button">Remove Assignment</a> </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% elif itemType == 'course' %}
+    <a class="btn btn-warning open-button" onclick="openForm()" role="button">Add Course</a>
+</div>
+</nav>
+        <div>
+            <!-- Pop-up -->
+            <div class="form-popup" id="myForm" style="display: none;">
+                <form class="form-container" method = "POST" action = "{% url 'addItem' 'course' %}">
+                    {% csrf_token %}
+                    <h1> Add a Course</h1>
+
+                    <label for="name"><b>Name</b></label>
+                    <input type="text" placeholder="Enter Course Name" name="name" required>
+                    <br>
+                    <label for="courseCode"><b>Course Code</b></label>
+                    <input type="text" placeholder="Enter Course Code" name="courseCode" required>
+                    <br>
+                    <label for="semester"><b>Semester</b></label>
+                    <input type="text" placeholder="ie: Fall or Spring " name="semester" required>
+                    <br>
+                    <label for="year"><b>Year</b></label>
+                    <input type="number" name="year" min="1858" max="9999" required>
+                    <br>
+
+                    <label for="students" class="form-label select-label"><b>Students</b></label>
+                    <select name="students" multiple = "multiple" class="form-select"  id="studentsSelect">
+                        {% for item in students %}
+                        <option value="{{item.id}}" class = "course-student-option"> {{item.name}} </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <!-- Add Students from course linked, might actually be in java for after form is submitted -->
+                    <button type="submit" class="submit btn" id = "addCourseButton" onclick="closeForm()">Add Course</button>
+                    <button type="button" class="cancel btn" onclick="closeForm()">Close</button>
+                </form>
+            </div>
+
+
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Course Name</th>
+                        <th scope="col">Course Code</th>
+                        <th scope="col">Semester</th>
+                        <th scope="col">Students Enrolled</th>
+                        <th scope="col"></th>
+                        <th scope="col">Remove</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <th scope="row">{{ item.id }}</th>
+                        <td><a href="{% url 'specificCourseView' item.id %}">{{ item.name }}</a></td>
+                        <td>{{ item.courseCode }}</td>
+                        <td>{{ item.semester }} </td>
+                        <td> {% for student in item.students.all %}
+                            <a href="{% url 'specificStudentView' student.id %}"> {{ student.name }} <br> </a>
+                        {% endfor %}</td>
+                        <td></td>
+                        <td><a class="btn btn-primary" href ="{% url 'removeItem' 'course' item.id %}" role="button">Remove Course</a> </td>
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+    {% elif itemType == 'project' %}
+
+        Project Database View
+        
+    </div>
+</nav>
+
+    {% elif itemType == 'databaseView' %}
+    <p>General View</p>
+    </div>
+</nav>
+        <div>
+            <table class="table table-striped"> 
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Students</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items.students %}
+                    <tr>
+                        <th scope="row">
+                            <a href="{% url 'specificStudentView' item.id %}">{{ item.name }}</a>
+                        </th>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <th scope="col">Courses</th>
+                    </tr>
+                    {% for item in items.courses %}
+                    <tr>
+                        <th scope="row">
+                            <a href="{% url 'specificCourseView' item.id %}">{{ item.name }}</a></th>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <th scope="col">Projects</th>
+                    </tr>
+                    {% for item in items.projects %}
+                    <tr>
+                        <th scope="row">
+                            <a href="{% url 'specificProjectView' item.id %}">{{ item.name }}</a></th>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <th scope="col">Assignments</th>
+                    </tr>
+                    {% for item in items.assignments %}
+                    <tr>
+                        <th scope="row">
+                            <a href="{% url 'specificAssignmentView' item.id %}">{{ item.name }}</a></th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    {% endif %}
+
+{% endblock %}

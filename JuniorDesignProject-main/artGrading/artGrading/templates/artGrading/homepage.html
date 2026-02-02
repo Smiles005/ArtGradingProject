@@ -1,0 +1,51 @@
+{% extends "artGrading/layout.html" %} 
+{% load static %} 
+
+{% block CSS %}
+    <link rel="stylesheet" href="{% static '/css/homepage.css' %}"> 
+    {{ block.super }}
+{% endblock %}
+
+{% block script %}
+    <script src="{% static '/js/homepage.js' %}"> </script>
+{% endblock %} 
+
+{% block body %}
+
+<div style="padding: 10px;">
+    <form action = "{% url 'searchResults' %}" method = "POST">
+        {% csrf_token %}
+        <input type="text" placeholder="Search..." id="myInput" name = "searchParameter" list = "search-datalist">
+        <div id="myDropdown" class="dropdown-content">
+            <h5>Assignments</h5>
+            <div id="dropdownAssignments">
+            </div>
+            <h5>Courses</h5>
+            <div id="dropdownCourses">
+            </div>
+            <h5>Projects</h5>
+            <div id="dropdownProjects">
+            </div>
+            <h5>Students</h5>
+            <div id="dropdownStudents">
+            </div>
+        </div>
+    </form>
+</div>
+<div style="padding: 40px;"></div>
+
+<div class = "container">
+    <div class = "row">
+        <div class = "col-md d-flex justify-content-center">
+            <a href="{% url 'assignmentView' %}"><button type="button" class="button">Assignments</button></a>
+        </div>
+       
+        <div class = "col-md d-flex justify-content-center">
+            <a href="{% url 'courseView' %}"><button type="button" class="button">Classes</button></a>
+        </div>
+
+    </div>
+</div>
+
+<!-- <div style="height: 1500px;"></div> -->
+{% endblock %}

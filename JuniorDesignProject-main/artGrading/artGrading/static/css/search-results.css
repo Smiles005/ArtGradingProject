@@ -1,0 +1,5 @@
+/* Sets the blocks for the Assignment, etc. sections to display block 
+       so two consecutive buttons aren't side-by-side when the first one's section is collapsed  */
+.search-results-block-content {
+    display: block;
+}

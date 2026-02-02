@@ -1,0 +1,50 @@
+{% extends "artGrading/base.html" %} 
+{% load static %}
+
+{% block baseScript %}
+    {% block script %}
+    {% endblock %}
+{% endblock %}
+
+{% block baseCSS %}
+    {% block CSS %}  
+        <link rel="stylesheet" href="{% static '/css/layout.css' %}">  
+    {% endblock %}
+{% endblock %}
+
+{% block navbar %}  
+<nav class="navbar navbar-expand-lg bg-body-tertiary" id="bigNav" >
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'homepage' %}" style="color: aliceblue;">Homepage</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'databaseView' %}"style="color: aliceblue;">DataBase View</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{% url 'createStudent' %}"style="color: aliceblue;">Add Student</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{% url 'createProject' %}"style="color: aliceblue;">Add Project</a> 
+          </li>
+      </ul>
+      {% if False %}
+        {% comment %}
+          set the above value to True for production mode and False for development mode
+        {% endcomment %}
+        <span class="logout">
+          <a class="logout-button" aria-current="page" href="{% url 'django_auth_adfs:logout' %}">Logout</a>
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block baseBody %}
+    {% block body %}
+    {% endblock %}
+{% endblock %}
