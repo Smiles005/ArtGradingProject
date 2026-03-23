@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draw on Canvas</title>
+    <style>
+        #drawCanvas {
+            border: 1px solid black;
+        }
+        #pdfCanvas {
+            pointer-events: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<button id="penBtn">Pen</button>
+<button id="eraserBtn">Eraser</button>
+<button id="textBtn">Text</button>
+<input type="color" id="colorPicker">
+<label>
+    Brush Size:
+    <input type="range" id="sizeSlider" min="1" max="50" value="3">
+</label>
+<span id="sizeDisplay">3</span>
+<button id="undo">Undo</button>
+
+<input type="file" id="pdfUpload" accept="application/pdf">
+<br><br>
+<div style="position:relative; display:inline-block;">
+    <canvas id="pdfCanvas"></canvas>
+    <canvas id="drawCanvas" style="position:absolute; left:0; top:0;"></canvas>
+</div>
+<script src="script.js"></script>
+
+
+<script>
+const canvas = document.getElementById("drawCanvas");
+const ctx = canvas.getContext("2d");
+//Starting settings
+ctx.lineCap = "round";
+let currentTool = "pen"; // pen | eraser | text
+let strokes = [];
+let currentStroke = null;
+let currentColor = null;
+
+//Set the color
+document.getElementById("colorPicker").addEventListener("input", (e) => {
+    currentStroke = null;
+    currentColor = e.target.value;
+    ctx.strokeStyle = currentColor;
+    ctx.fillStyle = ctx.strokeStyle;
+});
+
+//Set the size of the pen/eraser
+const sizeSlider = document.getElementById("sizeSlider");
+const sizeDisplay = document.getElementById("sizeDisplay");
+// Set initial size
+ctx.lineWidth = sizeSlider.value;
+// Update when slider moves
+sizeSlider.addEventListener("input", (e) => {
+    currentStroke = null;
+    ctx.font = e.target.value + "px Arial";
+    ctx.lineWidth = e.target.value;
+    sizeDisplay.textContent = e.target.value;
+});
+
+//Stuff for drawing
+    canvas.addEventListener("mousedown", (e) => {
+        if(currentStroke != null){
+            currentStroke = null;
+        }
+        else{const { offsetX, offsetY } = e;
+
+        currentStroke = {
+            tool: currentTool,
+            color: ctx.strokeStyle,
+            size: ctx.lineWidth,
+            points: [{ x: offsetX, y: offsetY }]
+        };
+
+        strokes.push(currentStroke);}
+        
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!currentStroke) return;
+
+        const { offsetX, offsetY } = e;
+        currentStroke.points.push({ x: offsetX, y: offsetY });
+
+        redrawCanvas();
+    });
+
+    function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (const stroke of strokes) {
+
+            if (stroke.tool === "text") {
+
+                ctx.fillStyle = stroke.color;
+                ctx.font = stroke.size + "px Arial";
+                ctx.fillText(stroke.text, stroke.x, stroke.y);
+
+                continue;
+            }
+
+            ctx.beginPath();
+            ctx.lineWidth = stroke.size;
+            ctx.strokeStyle = stroke.color;
+
+            ctx.globalCompositeOperation =
+                stroke.tool === "eraser"
+                    ? "destination-out"
+                    : "source-over";
+
+            const first = stroke.points[0];
+            ctx.moveTo(first.x, first.y);
+
+            for (const point of stroke.points) {
+                ctx.lineTo(point.x, point.y);
+            }
+
+            ctx.stroke();
+        }
+        ctx.globalCompositeOperation = "source-over";
+    }
+
+//Uncomment this if drawing should only happen when mouse is held down
+    canvas.addEventListener("mouseup", () => {
+        currentStroke = null;
+    });
+//Uncomment if drawing should end upon leaving canvas
+// canvas.addEventListener("mouseleave", () => {
+//     currentStroke = null;
+// });
+
+//Text Input
+canvas.addEventListener("click", (e) => {
+    if (currentTool !== "text") return;
+
+    currentStroke = null;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    createTextInput(x, y);
+});
+function createTextInput(x, y) {
+    const input = document.createElement("input");
+    input.type = "text";
+
+    input.style.position = "absolute";
+    const rect = canvas.getBoundingClientRect();
+
+    const fontSize = parseInt(ctx.font);
+    input.style.top = rect.top + y - fontSize + "px";
+    input.style.left = rect.left + x + "px";
+    input.style.font = ctx.font;
+    input.style.border = "1px solid #ccc";
+
+    document.body.appendChild(input);
+    input.focus();
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            ctx.globalCompositeOperation = "source-over"; // ensure normal mode
+            strokes.push({
+                tool: "text",
+                text: input.value,
+                x: x,
+                y: y,
+                color: ctx.fillStyle,
+                size: parseInt(ctx.font)
+            });
+            redrawCanvas();
+            document.body.removeChild(input);
+        }
+    });
+
+    input.addEventListener("blur", () => {
+        document.body.removeChild(input);
+    });
+}
+
+//Tool selection
+document.getElementById("penBtn").addEventListener("click", () => {
+    currentStroke = null;
+    currentTool = "pen";
+    ctx.globalCompositeOperation = "source-over"; // normal drawing
+});
+
+document.getElementById("eraserBtn").addEventListener("click", () => {
+    currentStroke = null;
+    currentTool = "eraser";
+    ctx.globalCompositeOperation = "destination-out"; // erase mode
+});
+
+document.getElementById("textBtn").addEventListener("click", () => {
+    currentStroke = null;
+    currentTool = "text";
+});
+
+//Undo button
+document.getElementById("undo").addEventListener("click", () => {
+    strokes.pop();
+    redrawCanvas();
+});
+</script>
+
+</body>
+</html>
