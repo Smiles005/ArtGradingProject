@@ -1,0 +1,6 @@
+Array
+(
+    [fileName] => 2023 Regional Incision Decision for web.pdf
+    [filePage] => 1
+    [jsonStrokes] => [{"tool":"text","color":"#0008ff","size":15,"points":[{"x":502,"y":155}]},{"tool":"text","text":"hello world","x":502,"y":154.79999923706055,"color":"#0008ff","size":15}]
+)

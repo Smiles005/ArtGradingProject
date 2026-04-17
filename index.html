@@ -31,7 +31,149 @@
     <canvas id="pdfCanvas"></canvas>
     <canvas id="drawCanvas" style="position:absolute; left:0; top:0;"></canvas>
 </div>
-<script src="script.js"></script>
+<button id="prevPage">Previous Page</button>
+<button id="nextPage">Next Page</button>
+
+<input type="text" id="page" placeholder="Page #">
+<button id="pageBtn">Go</button><br>
+<button id="save">Save</button>
+
+<script>
+const upload = document.getElementById("pdfUpload");
+const pdfCanvas = document.getElementById("pdfCanvas");
+const pdfCtx = pdfCanvas.getContext("2d");
+const drawCanvas = document.getElementById("drawCanvas");
+
+const prevBtn = document.getElementById("prevPage");
+const nextBtn = document.getElementById("nextPage");
+const pageInput = document.getElementById("page");
+const pageBtn = document.getElementById("pageBtn");
+
+let pdfDoc = null;
+let currentPage = 1;
+let totalPages = 0;
+
+// ---------- Render a page ----------
+function renderPage(pageNum) {
+    if (!pdfDoc) return;
+
+    pdfDoc.getPage(pageNum).then((page) => {
+
+        const viewport = page.getViewport({ scale: 1 });
+
+        // resize both layers
+        pdfCanvas.width = viewport.width;
+        pdfCanvas.height = viewport.height;
+
+        drawCanvas.width = viewport.width;
+        drawCanvas.height = viewport.height;
+
+        const renderContext = {
+            canvasContext: pdfCtx,
+            viewport: viewport
+        };
+
+        page.render(renderContext);
+
+        currentPage = pageNum;
+        document.getElementById("page").value = currentPage;
+        loadStrokes(upload.files[0].name, pageNum);
+    });
+}
+
+// ---------- Load PDF ----------
+upload.addEventListener("change", function (e) {
+
+    const file = e.target.files[0];
+
+    if (!file || file.type !== "application/pdf") {
+        alert("Please upload a PDF");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+
+        const typedarray = new Uint8Array(this.result);
+
+        pdfjsLib.getDocument(typedarray).promise.then(function (pdf) {
+
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            currentPage = 1;
+
+            renderPage(currentPage);
+        });
+    };
+
+    reader.readAsArrayBuffer(file);
+});
+
+// ---------- Buttons ----------
+
+// Next page
+nextBtn.addEventListener("click", () => {
+    if (!pdfDoc) return;
+    if (currentPage >= totalPages) return;
+
+    renderPage(currentPage + 1);
+    document.getElementById("page").value = currentPage++;
+});
+
+// Previous page
+prevBtn.addEventListener("click", () => {
+    if (!pdfDoc) return;
+    if (currentPage <= 1) return;
+
+    renderPage(currentPage - 1);
+    document.getElementById("page").value = currentPage++;
+});
+
+// Jump to page
+pageBtn.addEventListener("click", () => {
+    if (!pdfDoc) return;
+
+    const pageNum = parseInt(pageInput.value);
+
+    if (isNaN(pageNum)) return;
+    if (pageNum < 1 || pageNum > totalPages) return;
+    document.getElementById("page").value = pageNum;
+
+    renderPage(pageNum);
+});
+
+function loadStrokes(fileName, pageNum) {
+    const formData = new FormData();
+    formData.append("fileName", fileName);
+    formData.append("filePage", pageNum);
+
+    fetch("loadAnnotations.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(text => {
+
+        const data = JSON.parse(text);
+
+        if (Array.isArray(data)) {
+            window.strokes = data;
+        } else if (data.strokes) {
+            window.strokes = data.strokes;
+        } else {
+            window.strokes = [];
+        }
+
+        console.log("TYPE:", typeof data);
+        console.log("DATA:", data);
+        console.log("HAS strokes?", data.strokes);
+
+        redrawCanvas();
+    })
+    .catch(err => console.error("Load failed:", err));
+}
+</script>
 
 
 <script>
@@ -40,7 +182,7 @@ const ctx = canvas.getContext("2d");
 //Starting settings
 ctx.lineCap = "round";
 let currentTool = "pen"; // pen | eraser | text
-let strokes = [];
+window.strokes = [];
 let currentStroke = null;
 let currentColor = null;
 
@@ -206,6 +348,22 @@ document.getElementById("textBtn").addEventListener("click", () => {
 document.getElementById("undo").addEventListener("click", () => {
     strokes.pop();
     redrawCanvas();
+});
+
+document.getElementById("save").addEventListener("click", () => {
+
+    const formData = new FormData();
+
+    formData.append("fileName", document.getElementById("pdfUpload").files[0].name);
+    formData.append("filePage", document.getElementById("page").value);
+    formData.append("jsonStrokes", JSON.stringify(strokes));
+
+    fetch("save.php", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log("Data sent!");
 });
 </script>
 
