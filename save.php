@@ -10,9 +10,7 @@ die("Connection failed: " . $conn->connect_error);
 }
 //End connect to schema
 
-file_put_contents("php_errors.log", print_r($_POST, true));
 if (isset($_POST['jsonStrokes'])) {
-    file_put_contents("php_errors.log", print_r($_POST, true));
     $stmt = $conn->prepare("INSERT INTO annotations (file_name, annotations_json, page_num)
         VALUES (?, ?, ?)
         ON DUPLICATE KEY UPDATE annotations_json = ?");

@@ -1,6 +1,4 @@
-<!--TODO: add a clear canvas button-->
-<!--Erasing and text tool isn't working-->
-<!--Save every 5 annotations plus new upload or page change-->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -40,6 +38,7 @@
 <input type="text" id="page" placeholder="Page #">
 <button id="pageBtn">Go</button><br>
 <button id="save">Save</button>
+<button id="clearCanvas">Clear Annotations (WARNING: This cannot be undone)</button>
 
 <script>
 const upload = document.getElementById("pdfUpload");
@@ -55,6 +54,7 @@ const pageBtn = document.getElementById("pageBtn");
 let pdfDoc = null;
 let currentPage = 1;
 let totalPages = 0;
+let currentFileName = null;
 
 // ---------- Render a page ----------
 function renderPage(pageNum) {
@@ -86,6 +86,7 @@ function renderPage(pageNum) {
 
 // ---------- Load PDF ----------
 upload.addEventListener("change", function (e) {
+    saveAnnotations();
 
     const file = e.target.files[0];
 
@@ -93,7 +94,7 @@ upload.addEventListener("change", function (e) {
         alert("Please upload a PDF");
         return;
     }
-
+    currentFileName = file.name;
     const reader = new FileReader();
 
     reader.onload = function () {
@@ -117,6 +118,7 @@ upload.addEventListener("change", function (e) {
 
 // Next page
 nextBtn.addEventListener("click", () => {
+    saveAnnotations();
     if (!pdfDoc) return;
     if (currentPage >= totalPages) return;
 
@@ -126,6 +128,7 @@ nextBtn.addEventListener("click", () => {
 
 // Previous page
 prevBtn.addEventListener("click", () => {
+    saveAnnotations();
     if (!pdfDoc) return;
     if (currentPage <= 1) return;
 
@@ -135,6 +138,7 @@ prevBtn.addEventListener("click", () => {
 
 // Jump to page
 pageBtn.addEventListener("click", () => {
+    saveAnnotations();
     if (!pdfDoc) return;
 
     const pageNum = parseInt(pageInput.value);
@@ -173,6 +177,15 @@ function loadStrokes(fileName, pageNum) {
         console.log("HAS strokes?", data.strokes);
 
         redrawCanvas();
+        //reset to default values
+        document.getElementById("colorPicker").value = "#000000";
+        document.getElementById("sizeSlider").value = 3;
+        currentColor = "#000000";
+        ctx.strokeStyle = currentColor;
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.font = "3px Arial";
+        ctx.lineWidth = 3;
+        sizeDisplay.textContent = 3; 
     })
     .catch(err => console.error("Load failed:", err));
 }
@@ -188,6 +201,15 @@ let currentTool = "pen"; // pen | eraser | text
 window.strokes = [];
 let currentStroke = null;
 let currentColor = null;
+
+function setSettings(){
+    currentColor = document.getElementById("colorPicker").value;
+    ctx.strokeStyle = currentColor;
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.font = document.getElementById("sizeSlider").value + "px Arial";
+    ctx.lineWidth = document.getElementById("sizeSlider").value;
+    sizeDisplay.textContent = document.getElementById("sizeSlider").value;
+}
 
 //Set the color
 document.getElementById("colorPicker").addEventListener("input", (e) => {
@@ -224,7 +246,12 @@ sizeSlider.addEventListener("input", (e) => {
             points: [{ x: offsetX, y: offsetY }]
         };
 
-        strokes.push(currentStroke);}
+        strokes.push(currentStroke);
+        //save every 5 strokes
+        if(strokes.length % 5 === 0){
+            saveAnnotations();
+        }
+    }
         
     });
 
@@ -243,7 +270,7 @@ sizeSlider.addEventListener("input", (e) => {
         for (const stroke of strokes) {
 
             if (stroke.tool === "text") {
-
+                ctx.globalCompositeOperation = "source-over";
                 ctx.fillStyle = stroke.color;
                 ctx.font = stroke.size + "px Arial";
                 ctx.fillText(stroke.text, stroke.x, stroke.y);
@@ -320,6 +347,10 @@ function createTextInput(x, y) {
                 size: parseInt(ctx.font)
             });
             redrawCanvas();
+            //save every 5 strokes
+            if(strokes.length % 5 === 0){
+                saveAnnotations();
+            }
             document.body.removeChild(input);
         }
     });
@@ -334,17 +365,21 @@ document.getElementById("penBtn").addEventListener("click", () => {
     currentStroke = null;
     currentTool = "pen";
     ctx.globalCompositeOperation = "source-over"; // normal drawing
+    setSettings();
 });
 
 document.getElementById("eraserBtn").addEventListener("click", () => {
     currentStroke = null;
     currentTool = "eraser";
     ctx.globalCompositeOperation = "destination-out"; // erase mode
+    setSettings();
 });
 
 document.getElementById("textBtn").addEventListener("click", () => {
     currentStroke = null;
     currentTool = "text";
+    ctx.globalCompositeOperation = "source-over"; // normal drawing
+    setSettings();
 });
 
 //Undo button
@@ -354,10 +389,13 @@ document.getElementById("undo").addEventListener("click", () => {
 });
 
 document.getElementById("save").addEventListener("click", () => {
+    saveAnnotations();
+});
 
+function saveAnnotations(){
+    if (!currentFileName) return;
     const formData = new FormData();
-
-    formData.append("fileName", document.getElementById("pdfUpload").files[0].name);
+    formData.append("fileName", currentFileName);
     formData.append("filePage", document.getElementById("page").value);
     formData.append("jsonStrokes", JSON.stringify(strokes));
 
@@ -365,8 +403,12 @@ document.getElementById("save").addEventListener("click", () => {
         method: "POST",
         body: formData
     });
+}
 
-    console.log("Data sent!");
+document.getElementById("clearCanvas").addEventListener("click", () => {
+    strokes.length = 0;
+    saveAnnotations();
+    redrawCanvas();
 });
 </script>
 
