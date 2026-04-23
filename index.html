@@ -1,3 +1,5 @@
+<!--Check with Isabel if commenting out saveAnnotations() fixes it-->
+
 
 <!DOCTYPE html>
 <html>
@@ -80,7 +82,7 @@ function renderPage(pageNum) {
 
         currentPage = pageNum;
         document.getElementById("page").value = currentPage;
-        loadStrokes(upload.files[0].name, pageNum);
+        loadStrokes(currentFileName, pageNum);
     });
 }
 
@@ -105,9 +107,8 @@ upload.addEventListener("change", function (e) {
 
             pdfDoc = pdf;
             totalPages = pdf.numPages;
-            currentPage = 1;
 
-            renderPage(currentPage);
+            renderPage(1);
         });
     };
 
@@ -123,7 +124,6 @@ nextBtn.addEventListener("click", () => {
     if (currentPage >= totalPages) return;
 
     renderPage(currentPage + 1);
-    document.getElementById("page").value = currentPage++;
 });
 
 // Previous page
@@ -133,7 +133,6 @@ prevBtn.addEventListener("click", () => {
     if (currentPage <= 1) return;
 
     renderPage(currentPage - 1);
-    document.getElementById("page").value = currentPage++;
 });
 
 // Jump to page
@@ -396,7 +395,7 @@ function saveAnnotations(){
     if (!currentFileName) return;
     const formData = new FormData();
     formData.append("fileName", currentFileName);
-    formData.append("filePage", document.getElementById("page").value);
+    formData.append("filePage", currentPage);
     formData.append("jsonStrokes", JSON.stringify(strokes));
 
     fetch("save.php", {
