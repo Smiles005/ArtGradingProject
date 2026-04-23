@@ -1,415 +1,499 @@
-<!--Check with Isabel if commenting out saveAnnotations() fixes it-->
-
-
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Draw on Canvas</title>
     <style>
-        #drawCanvas {
-            border: 1px solid black;
-        }
-        #pdfCanvas {
-            pointer-events: none;
-        }
+      #drawCanvas {
+        border: 1px solid black;
+      }
+      #pdfCanvas {
+        pointer-events: none;
+      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
+    <button id="penBtn">Pen</button>
+    <button id="eraserBtn">Eraser</button>
+    <button id="textBtn">Text</button>
+    <input type="color" id="colorPicker" />
+    <label>
+      Brush Size:
+      <input type="range" id="sizeSlider" min="1" max="50" value="3" />
+    </label>
+    <span id="sizeDisplay">3</span>
+    <button id="undo">Undo</button>
 
-<button id="penBtn">Pen</button>
-<button id="eraserBtn">Eraser</button>
-<button id="textBtn">Text</button>
-<input type="color" id="colorPicker">
-<label>
-    Brush Size:
-    <input type="range" id="sizeSlider" min="1" max="50" value="3">
-</label>
-<span id="sizeDisplay">3</span>
-<button id="undo">Undo</button>
+    <input type="file" id="pdfUpload" accept="application/pdf" />
+    <br /><br />
+    <div style="position: relative; display: inline-block">
+      <canvas id="pdfCanvas"></canvas>
+      <canvas
+        id="drawCanvas"
+        style="position: absolute; left: 0; top: 0"
+      ></canvas>
+    </div>
+    <button id="prevPage">Previous Page</button>
+    <button id="nextPage">Next Page</button>
 
-<input type="file" id="pdfUpload" accept="application/pdf">
-<br><br>
-<div style="position:relative; display:inline-block;">
-    <canvas id="pdfCanvas"></canvas>
-    <canvas id="drawCanvas" style="position:absolute; left:0; top:0;"></canvas>
-</div>
-<button id="prevPage">Previous Page</button>
-<button id="nextPage">Next Page</button>
+    <input type="text" id="page" placeholder="Page #" />
+    <button id="pageBtn">Go</button><br />
+    <button id="save">Save</button>
+    <button id="clearCanvas">
+      Clear Annotations (WARNING: This cannot be undone)
+    </button>
 
-<input type="text" id="page" placeholder="Page #">
-<button id="pageBtn">Go</button><br>
-<button id="save">Save</button>
-<button id="clearCanvas">Clear Annotations (WARNING: This cannot be undone)</button>
+    <script>
+            const upload = document.getElementById("pdfUpload");
+            const pdfCanvas = document.getElementById("pdfCanvas");
+            const pdfCtx = pdfCanvas.getContext("2d");
+            const drawCanvas = document.getElementById("drawCanvas");
 
-<script>
-const upload = document.getElementById("pdfUpload");
-const pdfCanvas = document.getElementById("pdfCanvas");
-const pdfCtx = pdfCanvas.getContext("2d");
-const drawCanvas = document.getElementById("drawCanvas");
+            const prevBtn = document.getElementById("prevPage");
+            const nextBtn = document.getElementById("nextPage");
+            const pageInput = document.getElementById("page");
+            const pageBtn = document.getElementById("pageBtn");
 
-const prevBtn = document.getElementById("prevPage");
-const nextBtn = document.getElementById("nextPage");
-const pageInput = document.getElementById("page");
-const pageBtn = document.getElementById("pageBtn");
+            let pdfDoc = null;
+            let currentPage = 1;
+            let totalPages = 0;
+            let currentFileName = null;
 
-let pdfDoc = null;
-let currentPage = 1;
-let totalPages = 0;
-let currentFileName = null;
+            // ---------- Render a page ----------
+            function renderPage(pageNum) {
+              if (!pdfDoc) return;
+              pdfDoc.getPage(pageNum).then((page) => {
+                  const viewport = page.getViewport({ scale: 1 });
 
-// ---------- Render a page ----------
-function renderPage(pageNum) {
-    if (!pdfDoc) return;
+                  pdfCanvas.width = viewport.width;
+                  pdfCanvas.height = viewport.height;
+                  drawCanvas.width = viewport.width;
+                  drawCanvas.height = viewport.height;
 
-    pdfDoc.getPage(pageNum).then((page) => {
+                  const renderContext = {
+                      canvasContext: pdfCtx,
+                      viewport: viewport,
+                  };
 
-        const viewport = page.getViewport({ scale: 1 });
+                  page.render(renderContext);
 
-        // resize both layers
-        pdfCanvas.width = viewport.width;
-        pdfCanvas.height = viewport.height;
+                  currentPage = pageNum;
+                  document.getElementById("page").value = currentPage;
 
-        drawCanvas.width = viewport.width;
-        drawCanvas.height = viewport.height;
+                  loadStrokes(upload.files[0].name, pageNum);
 
-        const renderContext = {
-            canvasContext: pdfCtx,
-            viewport: viewport
-        };
+                  // OPTIONAL: generate PNG for saving
+                  // const png = renderAnnotationsToPNG(strokes, viewport.width, viewport.height);
+              });
+      }
 
-        page.render(renderContext);
+            // function renderPage(pageNum) {
+              // if (!pdfDoc) return;
+      //
+              // pdfDoc.getPage(pageNum).then((page) => {
+                // const viewport = page.getViewport({ scale: 1 });
+      //
+      //          resize both layers
+                // pdfCanvas.width = viewport.width;
+                // pdfCanvas.height = viewport.height;
+      //
+                // drawCanvas.width = viewport.width;
+                // drawCanvas.height = viewport.height;
+      //
+                // const renderContext = {
+                  // canvasContext: pdfCtx,
+                  // viewport: viewport,
+                // };
+      //
+                // page.render(renderContext);
+      //
+                // currentPage = pageNum;
+                // document.getElementById("page").value = currentPage;
+                // loadStrokes(upload.files[0].name, pageNum);
+              // });
+            // }
 
-        currentPage = pageNum;
-        document.getElementById("page").value = currentPage;
-        loadStrokes(currentFileName, pageNum);
-    });
-}
+            // ---------- Load PDF ----------
+            upload.addEventListener("change", function (e) {
+              saveAnnotations();
 
-// ---------- Load PDF ----------
-upload.addEventListener("change", function (e) {
-    saveAnnotations();
+              const file = e.target.files[0];
 
-    const file = e.target.files[0];
+              if (!file || file.type !== "application/pdf") {
+                alert("Please upload a PDF");
+                return;
+              }
+              currentFileName = file.name;
+              const reader = new FileReader();
 
-    if (!file || file.type !== "application/pdf") {
-        alert("Please upload a PDF");
-        return;
-    }
-    currentFileName = file.name;
-    const reader = new FileReader();
+              reader.onload = function () {
+                const typedarray = new Uint8Array(this.result);
 
-    reader.onload = function () {
+                pdfjsLib.getDocument(typedarray).promise.then(function (pdf) {
+                  pdfDoc = pdf;
+                  totalPages = pdf.numPages;
+                  currentPage = 1;
 
-        const typedarray = new Uint8Array(this.result);
+                  renderPage(currentPage);
+                });
+              };
 
-        pdfjsLib.getDocument(typedarray).promise.then(function (pdf) {
+              reader.readAsArrayBuffer(file);
+            });
 
-            pdfDoc = pdf;
-            totalPages = pdf.numPages;
+            // ---------- Buttons ----------
 
-            renderPage(1);
-        });
-    };
+            // Next page
+            nextBtn.addEventListener("click", () => {
+              saveAnnotations();
+              if (!pdfDoc) return;
+              if (currentPage >= totalPages) return;
 
-    reader.readAsArrayBuffer(file);
-});
+              renderPage(currentPage + 1);
+              document.getElementById("page").value = currentPage++;
+            });
 
-// ---------- Buttons ----------
+            // Previous page
+            prevBtn.addEventListener("click", () => {
+              saveAnnotations();
+              if (!pdfDoc) return;
+              if (currentPage <= 1) return;
 
-// Next page
-nextBtn.addEventListener("click", () => {
-    saveAnnotations();
-    if (!pdfDoc) return;
-    if (currentPage >= totalPages) return;
+              renderPage(currentPage - 1);
+              document.getElementById("page").value = currentPage++;
+            });
 
-    renderPage(currentPage + 1);
-});
+            // Jump to page
+            pageBtn.addEventListener("click", () => {
+              saveAnnotations();
+              if (!pdfDoc) return;
 
-// Previous page
-prevBtn.addEventListener("click", () => {
-    saveAnnotations();
-    if (!pdfDoc) return;
-    if (currentPage <= 1) return;
+              const pageNum = parseInt(pageInput.value);
 
-    renderPage(currentPage - 1);
-});
+              if (isNaN(pageNum)) return;
+              if (pageNum < 1 || pageNum > totalPages) return;
+              document.getElementById("page").value = pageNum;
 
-// Jump to page
-pageBtn.addEventListener("click", () => {
-    saveAnnotations();
-    if (!pdfDoc) return;
+              renderPage(pageNum);
+            });
 
-    const pageNum = parseInt(pageInput.value);
+            function loadStrokes(fileName, pageNum) {
+              const formData = new FormData();
+              formData.append("fileName", fileName);
+              formData.append("filePage", pageNum);
 
-    if (isNaN(pageNum)) return;
-    if (pageNum < 1 || pageNum > totalPages) return;
-    document.getElementById("page").value = pageNum;
+              fetch("loadAnnotations.php", {
+                method: "POST",
+                body: formData,
+              })
+                .then((res) => res.text())
+                .then((text) => {
+                  const data = JSON.parse(text);
 
-    renderPage(pageNum);
-});
+                  if (Array.isArray(data)) {
+                    window.strokes = data;
+                  } else if (data.strokes) {
+                    window.strokes = data.strokes;
+                  } else {
+                    window.strokes = [];
+                  }
 
-function loadStrokes(fileName, pageNum) {
-    const formData = new FormData();
-    formData.append("fileName", fileName);
-    formData.append("filePage", pageNum);
+                  console.log("TYPE:", typeof data);
+                  console.log("DATA:", data);
+                  console.log("HAS strokes?", data.strokes);
 
-    fetch("loadAnnotations.php", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.text())
-    .then(text => {
+                  redrawCanvas();
+                  //reset to default values
+                  document.getElementById("colorPicker").value = "#000000";
+                  document.getElementById("sizeSlider").value = 3;
+                  currentColor = "#000000";
+                  ctx.strokeStyle = currentColor;
+                  ctx.fillStyle = ctx.strokeStyle;
+                  ctx.font = "3px Arial";
+                  ctx.lineWidth = 3;
+                  sizeDisplay.textContent = 3;
+                })
+                .catch((err) => console.error("Load failed:", err));
+            }
+    </script>
 
-        const data = JSON.parse(text);
+    <script>
+      const canvas = document.getElementById("drawCanvas");
+      const ctx = canvas.getContext("2d");
+      //Starting settings
+      ctx.lineCap = "round";
+      let currentTool = "pen"; // pen | eraser | text
+      window.strokes = [];
+      let currentStroke = null;
+      let currentColor = null;
 
-        if (Array.isArray(data)) {
-            window.strokes = data;
-        } else if (data.strokes) {
-            window.strokes = data.strokes;
-        } else {
-            window.strokes = [];
-        }
-
-        console.log("TYPE:", typeof data);
-        console.log("DATA:", data);
-        console.log("HAS strokes?", data.strokes);
-
-        redrawCanvas();
-        //reset to default values
-        document.getElementById("colorPicker").value = "#000000";
-        document.getElementById("sizeSlider").value = 3;
-        currentColor = "#000000";
+      function setSettings() {
+        currentColor = document.getElementById("colorPicker").value;
         ctx.strokeStyle = currentColor;
         ctx.fillStyle = ctx.strokeStyle;
-        ctx.font = "3px Arial";
-        ctx.lineWidth = 3;
-        sizeDisplay.textContent = 3; 
-    })
-    .catch(err => console.error("Load failed:", err));
-}
-</script>
+        ctx.font = document.getElementById("sizeSlider").value + "px Arial";
+        ctx.lineWidth = document.getElementById("sizeSlider").value;
+        sizeDisplay.textContent = document.getElementById("sizeSlider").value;
+      }
 
+      //Set the color
+      document.getElementById("colorPicker").addEventListener("input", (e) => {
+        currentStroke = null;
+        currentColor = e.target.value;
+        ctx.strokeStyle = currentColor;
+        ctx.fillStyle = ctx.strokeStyle;
+      });
 
-<script>
-const canvas = document.getElementById("drawCanvas");
-const ctx = canvas.getContext("2d");
-//Starting settings
-ctx.lineCap = "round";
-let currentTool = "pen"; // pen | eraser | text
-window.strokes = [];
-let currentStroke = null;
-let currentColor = null;
+      //Set the size of the pen/eraser
+      const sizeSlider = document.getElementById("sizeSlider");
+      const sizeDisplay = document.getElementById("sizeDisplay");
+      // Set initial size
+      ctx.lineWidth = sizeSlider.value;
+      // Update when slider moves
+      sizeSlider.addEventListener("input", (e) => {
+        currentStroke = null;
+        ctx.font = e.target.value + "px Arial";
+        ctx.lineWidth = e.target.value;
+        sizeDisplay.textContent = e.target.value;
+      });
 
-function setSettings(){
-    currentColor = document.getElementById("colorPicker").value;
-    ctx.strokeStyle = currentColor;
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.font = document.getElementById("sizeSlider").value + "px Arial";
-    ctx.lineWidth = document.getElementById("sizeSlider").value;
-    sizeDisplay.textContent = document.getElementById("sizeSlider").value;
-}
+      //Stuff for drawing
+      canvas.addEventListener("mousedown", (e) => {
+        if (currentStroke != null) {
+          currentStroke = null;
+        } else {
+          const { offsetX, offsetY } = e;
 
-//Set the color
-document.getElementById("colorPicker").addEventListener("input", (e) => {
-    currentStroke = null;
-    currentColor = e.target.value;
-    ctx.strokeStyle = currentColor;
-    ctx.fillStyle = ctx.strokeStyle;
-});
-
-//Set the size of the pen/eraser
-const sizeSlider = document.getElementById("sizeSlider");
-const sizeDisplay = document.getElementById("sizeDisplay");
-// Set initial size
-ctx.lineWidth = sizeSlider.value;
-// Update when slider moves
-sizeSlider.addEventListener("input", (e) => {
-    currentStroke = null;
-    ctx.font = e.target.value + "px Arial";
-    ctx.lineWidth = e.target.value;
-    sizeDisplay.textContent = e.target.value;
-});
-
-//Stuff for drawing
-    canvas.addEventListener("mousedown", (e) => {
-        if(currentStroke != null){
-            currentStroke = null;
-        }
-        else{const { offsetX, offsetY } = e;
-
-        currentStroke = {
+          currentStroke = {
             tool: currentTool,
             color: ctx.strokeStyle,
             size: ctx.lineWidth,
-            points: [{ x: offsetX, y: offsetY }]
-        };
+            points: [{ x: offsetX, y: offsetY }],
+          };
 
-        strokes.push(currentStroke);
-        //save every 5 strokes
-        if(strokes.length % 5 === 0){
+          strokes.push(currentStroke);
+          //save every 5 strokes
+          if (strokes.length % 5 === 0) {
             saveAnnotations();
+          }
         }
-    }
-        
-    });
+      });
 
-    canvas.addEventListener("mousemove", (e) => {
+      canvas.addEventListener("mousemove", (e) => {
         if (!currentStroke) return;
 
         const { offsetX, offsetY } = e;
         currentStroke.points.push({ x: offsetX, y: offsetY });
 
         redrawCanvas();
-    });
+      });
 
-    function redrawCanvas() {
+      function redrawCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         for (const stroke of strokes) {
+          if (stroke.tool === "text") {
+            ctx.globalCompositeOperation = "source-over";
+            ctx.fillStyle = stroke.color;
+            ctx.font = stroke.size + "px Arial";
+            ctx.fillText(stroke.text, stroke.x, stroke.y);
 
-            if (stroke.tool === "text") {
-                ctx.globalCompositeOperation = "source-over";
-                ctx.fillStyle = stroke.color;
-                ctx.font = stroke.size + "px Arial";
-                ctx.fillText(stroke.text, stroke.x, stroke.y);
+            continue;
+          }
 
-                continue;
-            }
+          ctx.beginPath();
+          ctx.lineWidth = stroke.size;
+          ctx.strokeStyle = stroke.color;
 
-            ctx.beginPath();
-            ctx.lineWidth = stroke.size;
-            ctx.strokeStyle = stroke.color;
+          ctx.globalCompositeOperation =
+            stroke.tool === "eraser" ? "destination-out" : "source-over";
 
-            ctx.globalCompositeOperation =
-                stroke.tool === "eraser"
-                    ? "destination-out"
-                    : "source-over";
+          const first = stroke.points[0];
+          ctx.moveTo(first.x, first.y);
 
-            const first = stroke.points[0];
-            ctx.moveTo(first.x, first.y);
+          for (const point of stroke.points) {
+            ctx.lineTo(point.x, point.y);
+          }
 
-            for (const point of stroke.points) {
-                ctx.lineTo(point.x, point.y);
-            }
-
-            ctx.stroke();
+          ctx.stroke();
         }
         ctx.globalCompositeOperation = "source-over";
-    }
+      }
 
-//Uncomment this if drawing should only happen when mouse is held down
-    canvas.addEventListener("mouseup", () => {
+      //Uncomment this if drawing should only happen when mouse is held down
+      canvas.addEventListener("mouseup", () => {
         currentStroke = null;
-    });
-//Uncomment if drawing should end upon leaving canvas
-// canvas.addEventListener("mouseleave", () => {
-//     currentStroke = null;
-// });
+      });
+      //Uncomment if drawing should end upon leaving canvas
+      // canvas.addEventListener("mouseleave", () => {
+      //     currentStroke = null;
+      // });
 
-//Text Input
-canvas.addEventListener("click", (e) => {
-    if (currentTool !== "text") return;
+      //Text Input
+      canvas.addEventListener("click", (e) => {
+        if (currentTool !== "text") return;
 
-    currentStroke = null;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+        currentStroke = null;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-    createTextInput(x, y);
-});
-function createTextInput(x, y) {
-    const input = document.createElement("input");
-    input.type = "text";
+        createTextInput(x, y);
+      });
+      function createTextInput(x, y) {
+        const input = document.createElement("input");
+        input.type = "text";
 
-    input.style.position = "absolute";
-    const rect = canvas.getBoundingClientRect();
+        input.style.position = "absolute";
+        const rect = canvas.getBoundingClientRect();
 
-    const fontSize = parseInt(ctx.font);
-    input.style.top = rect.top + y - fontSize + "px";
-    input.style.left = rect.left + x + "px";
-    input.style.font = ctx.font;
-    input.style.border = "1px solid #ccc";
+        const fontSize = parseInt(ctx.font);
+        input.style.top = rect.top + y - fontSize + "px";
+        input.style.left = rect.left + x + "px";
+        input.style.font = ctx.font;
+        input.style.border = "1px solid #ccc";
 
-    document.body.appendChild(input);
-    input.focus();
+        document.body.appendChild(input);
+        input.focus();
 
-    input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
             ctx.globalCompositeOperation = "source-over"; // ensure normal mode
             strokes.push({
-                tool: "text",
-                text: input.value,
-                x: x,
-                y: y,
-                color: ctx.fillStyle,
-                size: parseInt(ctx.font)
+              tool: "text",
+              text: input.value,
+              x: x,
+              y: y,
+              color: ctx.fillStyle,
+              size: parseInt(ctx.font),
             });
             redrawCanvas();
             //save every 5 strokes
-            if(strokes.length % 5 === 0){
-                saveAnnotations();
+            if (strokes.length % 5 === 0) {
+              saveAnnotations();
             }
             document.body.removeChild(input);
-        }
-    });
+          }
+        });
 
-    input.addEventListener("blur", () => {
-        document.body.removeChild(input);
-    });
-}
+        input.addEventListener("blur", () => {
+          document.body.removeChild(input);
+        });
+      }
 
-//Tool selection
-document.getElementById("penBtn").addEventListener("click", () => {
-    currentStroke = null;
-    currentTool = "pen";
-    ctx.globalCompositeOperation = "source-over"; // normal drawing
-    setSettings();
-});
+      //Tool selection
+      document.getElementById("penBtn").addEventListener("click", () => {
+        currentStroke = null;
+        currentTool = "pen";
+        ctx.globalCompositeOperation = "source-over"; // normal drawing
+        setSettings();
+      });
 
-document.getElementById("eraserBtn").addEventListener("click", () => {
-    currentStroke = null;
-    currentTool = "eraser";
-    ctx.globalCompositeOperation = "destination-out"; // erase mode
-    setSettings();
-});
+      document.getElementById("eraserBtn").addEventListener("click", () => {
+        currentStroke = null;
+        currentTool = "eraser";
+        ctx.globalCompositeOperation = "destination-out"; // erase mode
+        setSettings();
+      });
 
-document.getElementById("textBtn").addEventListener("click", () => {
-    currentStroke = null;
-    currentTool = "text";
-    ctx.globalCompositeOperation = "source-over"; // normal drawing
-    setSettings();
-});
+      document.getElementById("textBtn").addEventListener("click", () => {
+        currentStroke = null;
+        currentTool = "text";
+        ctx.globalCompositeOperation = "source-over"; // normal drawing
+        setSettings();
+      });
 
-//Undo button
-document.getElementById("undo").addEventListener("click", () => {
-    strokes.pop();
-    redrawCanvas();
-});
+      //Undo button
+      document.getElementById("undo").addEventListener("click", () => {
+        strokes.pop();
+        redrawCanvas();
+      });
 
-document.getElementById("save").addEventListener("click", () => {
-    saveAnnotations();
-});
+      document.getElementById("save").addEventListener("click", () => {
+        saveAnnotations();
+        if (!currentFileName) return;
 
-function saveAnnotations(){
-    if (!currentFileName) return;
-    const formData = new FormData();
-    formData.append("fileName", currentFileName);
-    formData.append("filePage", currentPage);
-    formData.append("jsonStrokes", JSON.stringify(strokes));
+        // 1. Get PDF page size from the canvas
+        const width = drawCanvas.width;
+        const height = drawCanvas.height;
 
-    fetch("save.php", {
-        method: "POST",
-        body: formData
-    });
-}
+        // 2. Convert strokes → PNG
+        const pngDataURL = renderAnnotationsToPNG(strokes, width, height);
 
-document.getElementById("clearCanvas").addEventListener("click", () => {
-    strokes.length = 0;
-    saveAnnotations();
-    redrawCanvas();
-});
-</script>
+        // 3. Send JSON + PNG to PHP
+        const formData = new FormData();
+        formData.append("fileName", currentFileName);
+        formData.append("filePage", currentPage);
+        formData.append("jsonStrokes", JSON.stringify(strokes));
+        formData.append("pngData", pngDataURL);
 
-</body>
+        fetch("save.php", {
+            method: "POST",
+            body: formData,
+        })
+
+      });
+
+      function saveAnnotations() {
+        if (!currentFileName) return;
+        const formData = new FormData();
+        formData.append("fileName", currentFileName);
+        formData.append("filePage", currentPage);
+        formData.append("jsonStrokes", JSON.stringify(strokes));
+
+        fetch("save.php", {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      document.getElementById("clearCanvas").addEventListener("click", () => {
+        strokes.length = 0;
+        saveAnnotations();
+        redrawCanvas();
+      });
+      function renderAnnotationsToPNG(strokes, width, height) {
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, width, height);
+
+          strokes.forEach(item => {
+              const tool = item.tool;
+              const color = item.color || "#000000";+
+              const size = item.size || 1;
+
+              if (tool === "pen" && item.points && item.points.length > 1) {
+                  ctx.strokeStyle = color;
+                  ctx.lineWidth = size;
+                  ctx.lineCap = "round";
+                  ctx.lineJoin = "round";
+
+                  ctx.beginPath();
+                  const pts = item.points;
+                  ctx.moveTo(pts[0].x, pts[0].y);
+                  pts.forEach(p => ctx.lineTo(p.x, p.y));
+                  ctx.stroke();
+              }
+
+              if (tool === "text") {
+                  const text = item.text || "";
+                  const p = item.points ? item.points[0] : { x: item.x, y: item.y };
+
+                  if (text && p) {
+                      ctx.fillStyle = color;
+                      ctx.font = `${size}px Arial`;
+                      ctx.fillText(text, p.x, p.y);
+                  }
+              }
+          });
+
+          return canvas.toDataURL("image/png");
+      }
+
+
+    </script>
+  </body>
 </html>
