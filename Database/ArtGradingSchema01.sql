@@ -1,8 +1,8 @@
 -- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
--- Host: 192.168.56.102    Database: art_grading_project
+-- Host: 192.168.56.101    Database: art_grading_project
 -- ------------------------------------------------------
--- Server version	8.0.43-0ubuntu0.24.04.2
+-- Server version	8.0.43-0ubuntu0.24.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -102,9 +102,10 @@ CREATE TABLE `class` (
   `semester` enum('Spring','Summer','Fall','Winter') NOT NULL,
   `course_code` varchar(30) DEFAULT NULL,
   `section` varchar(10) DEFAULT NULL,
+  `class_name` varchar(255) NOT NULL,
   PRIMARY KEY (`class_id`),
   KEY `idx_class_year_semester` (`year`,`semester`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -118,8 +119,9 @@ CREATE TABLE `instructor` (
   `instructor_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `first_name` varchar(100) DEFAULT NULL,
   `last_name` varchar(100) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
   PRIMARY KEY (`instructor_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=314 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,6 +153,7 @@ CREATE TABLE `student` (
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
+  `birthday` date DEFAULT NULL,
   PRIMARY KEY (`student_id`),
   KEY `idx_student_name` (`last_name`,`first_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -182,4 +185,4 @@ CREATE TABLE `student_class` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-20 11:26:54
+-- Dump completed on 2026-05-06 15:49:03
