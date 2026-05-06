@@ -1,5 +1,5 @@
 # BCArtGradingProject
-
+//This is the Depreciated version that we were working from but ended up just starting from scratch
 Note: right before deploying the site to the server (for testing), we need to put the testing one in a directory within the `artGrading\artGrading` directory. This is so we can still have a common testing database (the one in the aforementioned folder in the `artGrading\artGrading` directory) and we don't accidentally overwrite our production-ready database (let's have it be the one in the outer 'artGrading' folder) with our testing changes. Also, before deploying, we need to create a production and development settings files. When we do, put the location of the database in the production (in the `artGrading` directory) and the development (in the aforementioned directory in the `artGrading\artGrading` directory). 
 
 When switching the site from development mode from/to production mode, switch the function return values from/to `False` and `True`, respectively, for the `inProductionMode` function in [`artGrading/artGrading/settings/base.py`](/artGrading/artGrading/settings/base.py) and the truth value in the `{% if %}` Django template tag wrapping the logout link in [artGrading/artGrading/templates/artGrading/layout.html](/artGrading/artGrading/templates/artGrading/layout.html).
