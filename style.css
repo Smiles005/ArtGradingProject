@@ -1,0 +1,139 @@
+/* ---------- Global Layout ---------- */
+body {
+    font-family: "Inter", Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+header {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* ---------- Toolbar Styling ---------- */
+button,
+input[type="color"],
+input[type="range"],
+input[type="file"],
+input[type="text"] {
+    margin: 6px 4px;
+}
+
+button {
+    background: #4a6cf7;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: #3c5ae0;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+#eraserBtn {
+    background: #e74c3c;
+}
+
+#eraserBtn:hover {
+    background: #c0392b;
+}
+
+#textBtn {
+    background: #27ae60;
+}
+
+#textBtn:hover {
+    background: #1e8a4c;
+}
+
+#undo {
+    background: #f39c12;
+}
+
+#undo:hover {
+    background: #d68910;
+}
+
+#clearCanvas {
+    background: #b71c1c;
+}
+
+#clearCanvas:hover {
+    background: #8e1515;
+}
+
+/* ---------- Inputs ---------- */
+input[type="color"] {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="range"] {
+    width: 150px;
+}
+
+input[type="file"] {
+    padding: 6px;
+}
+
+input[type="text"] {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* ---------- Canvas Container ---------- */
+div[style*="position: relative"] {
+    margin-top: 20px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ---------- PDF + Drawing Canvas ---------- */
+#pdfCanvas {
+    display: block;
+    background: white;
+}
+
+#drawCanvas {
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+/* ---------- Page Navigation ---------- */
+#prevPage,
+#nextPage,
+#pageBtn {
+    background: #34495e;
+}
+
+#prevPage:hover,
+#nextPage:hover,
+#pageBtn:hover {
+    background: #2c3e50;
+}
+
+/* ---------- Save Button ---------- */
+#save {
+    background: #16a085;
+}
+
+#save:hover {
+    background: #12806a;
+}

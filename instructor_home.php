@@ -1,7 +1,19 @@
+<?php
+session_start();
+
+// Must be logged in
+if (!isset($_SESSION['instructor_id'])) {
+    header("Location: instructor_login.php");
+    exit();
+}
+
+$first = $_SESSION['first_name'];
+$last = $_SESSION['last_name'];
+?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome</title>
+    <title>Instructor Home</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,7 +24,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .container {
             background: white;
             padding: 40px;
@@ -21,12 +32,10 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.25);
             text-align: center;
         }
-
-        h1 {
+        h2 {
             color: #283e51;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
         }
-
         .btn {
             display: block;
             width: 90%;
@@ -39,7 +48,6 @@
             font-size: 18px;
             transition: 0.2s;
         }
-
         .btn:hover {
             background: #35516a;
         }
@@ -48,10 +56,11 @@
 <body>
 
 <div class="container">
-    <h1>Welcome</h1>
+    <h2>Hello, <?php echo htmlspecialchars($first . " " . $last); ?>!</h2>
+    <p>Select an option:</p>
 
-    <a class="btn" href="student_login.php">Student Login</a>
-    <a class="btn" href="instructor_login.php">Instructor Login</a>
+    <a class="btn" href="drawing.html">Go to Drawing Page</a>
+    <a class="btn" href="instructor_classes.php">View Your Classes</a>
 </div>
 
 </body>
